@@ -79,12 +79,21 @@ function compressImage(file) {
 }
 
 function openPrint(html) {
-  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-  const url  = URL.createObjectURL(blob);
-  const win  = window.open(url, "_blank");
-  if (win) { win.onload = () => setTimeout(() => win.print(), 600); }
-  else { const a = document.createElement("a"); a.href = url; a.download = "rapporto-qc.html"; a.click(); }
-  setTimeout(() => URL.revokeObjectURL(url), 15000);
+  const win = window.open("", "_blank");
+  if (win) {
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+    setTimeout(() => win.print(), 1000);
+  } else {
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url  = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "rapporto-qc.html";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
 }
 
 // ── PDF singolo rapporto ──────────────────────────────────────────────────
