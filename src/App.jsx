@@ -22,7 +22,7 @@ const D = {
   surface: "#ffffff",
   border:  "#dde1e7",
   text:    "#1a1a2e",
-  muted:   "#7a8394",
+  muted:   "#2d3142",
   green:   "#16a34a",
   greenBg: "#dcfce7",
   amber:   "#d97706",
