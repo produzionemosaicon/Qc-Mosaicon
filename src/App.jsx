@@ -6,13 +6,13 @@ import { getDatabase, ref, onValue, push, remove } from "https://www.gstatic.com
 //  CONFIGURA QUI I TUOI DATI FIREBASE
 // ═══════════════════════════════════════════════════════════════
 const FIREBASE_CONFIG = {
-  apiKey:            "INCOLLA_QUI_IL_TUO_apiKey",
-  authDomain:        "INCOLLA_QUI_IL_TUO_authDomain",
-  databaseURL:       "INCOLLA_QUI_IL_TUO_databaseURL",
-  projectId:         "INCOLLA_QUI_IL_TUO_projectId",
-  storageBucket:     "INCOLLA_QUI_IL_TUO_storageBucket",
-  messagingSenderId: "INCOLLA_QUI_IL_TUO_messagingSenderId",
-  appId:             "INCOLLA_QUI_IL_TUO_appId",
+   apiKey: "AIzaSyD0D_Bv58XDUhUlhmn3xBUMmZpgQ8FlwEA",
+  authDomain: "controllo-qualita-3f014.firebaseapp.com",
+  databaseURL: "https://controllo-qualita-3f014-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "controllo-qualita-3f014",
+  storageBucket: "controllo-qualita-3f014.firebasestorage.app",
+  messagingSenderId: "624379495703",
+  appId: "1:624379495703:web:0cf802649e0f047d82e352",
 };
 // ═══════════════════════════════════════════════════════════════
 
