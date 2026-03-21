@@ -79,21 +79,12 @@ function compressImage(file) {
 }
 
 function openPrint(html) {
-  const win = window.open("", "_blank");
-  if (win) {
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
-    setTimeout(() => win.print(), 1000);
-  } else {
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-    const url  = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "rapporto-qc.html";
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
-  }
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const url  = URL.createObjectURL(blob);
+  const win  = window.open(url, "_blank");
+  if (win) { win.onload = () => setTimeout(() => win.print(), 600); }
+  else { const a = document.createElement("a"); a.href = url; a.download = "rapporto-qc.html"; a.click(); }
+  setTimeout(() => URL.revokeObjectURL(url), 15000);
 }
 
 // ── PDF singolo rapporto ──────────────────────────────────────────────────
@@ -306,10 +297,50 @@ function buildCumulativePDF(reports, filtro) {
   </table>
 
   <div style="font-size:13px;font-weight:700;color:#1a1a1a;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #1a1a1a;padding-bottom:5px;margin:18px 0 10px">Elenco rapporti</div>
-  <table>
+  <table style="margin-bottom:24px">
     <thead><tr><th>Data</th><th>Calzaturificio</th><th>Controllore</th><th>Articoli</th><th style="text-align:center">Paia ctrl.</th><th style="text-align:center">Conformita</th></tr></thead>
     <tbody>${righeReport}</tbody>
   </table>
+
+  <div style="font-size:13px;font-weight:700;color:#1a1a1a;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #1a1a1a;padding-bottom:5px;margin:18px 0 14px">Dettaglio articoli per rapporto</div>
+  ${reports.map(r => {
+    const artRows = (r.articoli||[]).map((a,i) => {
+      const qC = parseInt(a.qtaControllata)||0;
+      const qCo= parseInt(a.qtaConformi)||0;
+      const qR = parseInt(a.qtaRiparate)||0;
+      const qK = parseInt(a.qtaKO)||0;
+      const qRe= parseInt(a.qtaRese)||0;
+      const pCo= qC>0?Math.round(qCo/qC*100):0;
+      const difetti = (a.difettiRiparati||[]).join(", ")||"—";
+      return `<tr>
+        <td style="padding:6px 10px;color:#333">${i+1}. ${a.modello}</td>
+        <td style="padding:6px 10px;text-align:center">${qC}</td>
+        <td style="padding:6px 10px;text-align:center;color:#27ae60;font-weight:700">${qCo} (${pCo}%)</td>
+        <td style="padding:6px 10px;text-align:center;color:#e67e22">${qR}</td>
+        <td style="padding:6px 10px;text-align:center;color:#c0392b">${qK}</td>
+        <td style="padding:6px 10px;text-align:center;color:#e74c3c">${qRe}</td>
+        <td style="padding:6px 10px;font-size:9px;color:#666">${difetti}</td>
+      </tr>`;
+    }).join("");
+    return `<div style="margin-bottom:16px;page-break-inside:avoid">
+      <div style="background:#f5f5f5;padding:8px 12px;border-radius:6px 6px 0 0;border:1px solid #e0e0e0;border-bottom:none;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:700;font-size:11px;color:#1a1a1a">${r.calzaturificio}</div>
+        <div style="font-size:10px;color:#666">${r.controllore} &nbsp;·&nbsp; ${fmtDate(r.dataControllo)}</div>
+      </div>
+      <table style="border:1px solid #e0e0e0;border-radius:0 0 6px 6px">
+        <thead><tr style="background:#333">
+          <th style="color:#fff;padding:5px 10px;font-size:9px;text-align:left;letter-spacing:.3px">Articolo</th>
+          <th style="color:#fff;padding:5px 10px;font-size:9px;text-align:center">Ctrl.</th>
+          <th style="color:#fff;padding:5px 10px;font-size:9px;text-align:center">Conformi</th>
+          <th style="color:#fff;padding:5px 10px;font-size:9px;text-align:center">Riparate</th>
+          <th style="color:#fff;padding:5px 10px;font-size:9px;text-align:center">KO</th>
+          <th style="color:#fff;padding:5px 10px;font-size:9px;text-align:center">Rese</th>
+          <th style="color:#fff;padding:5px 10px;font-size:9px;text-align:left">Difetti</th>
+        </tr></thead>
+        <tbody>${artRows}</tbody>
+      </table>
+    </div>`;
+  }).join("")}
 
   <div style="margin-top:24px;border-top:1px solid #ddd;padding-top:10px;display:flex;justify-content:space-between;font-size:9px;color:#aaa">
     <span>Generato il ${new Date().toLocaleDateString("it-IT")} ore ${new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}</span>
