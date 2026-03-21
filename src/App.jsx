@@ -537,8 +537,8 @@ export default function App() {
 
         {/* KPI riepilogo */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10,marginBottom:14}}>
-          {[["Controllate",totC,D.text,"transparent","none"],
-            ["Conformi",totCo,D.green,D.greenBg,`3px solid ${D.green}`],
+          {[[totC,"Controllate",D.text,"transparent","none"],
+            [totCo,"Conformi",D.green,D.greenBg,`3px solid ${D.green}`],
             [(r.articoli||[]).reduce((a,x)=>a+(x.qtaRiparate||0),0),"Riparate",D.amber,D.amberBg,`3px solid ${D.amber}`],
             [(r.articoli||[]).reduce((a,x)=>a+(x.qtaKO||0),0),"KO",D.red,D.redBg,`3px solid ${D.red}`],
             [(r.articoli||[]).reduce((a,x)=>a+(x.qtaRese||0),0),"Rese",D.red,D.redBg,`3px solid ${D.red}`],
