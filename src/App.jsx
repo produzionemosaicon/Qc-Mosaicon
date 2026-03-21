@@ -6,13 +6,13 @@ import { getDatabase, ref, onValue, push, remove } from "https://www.gstatic.com
 //  CONFIGURA QUI I TUOI DATI FIREBASE
 // ═══════════════════════════════════════════════════════════════
 const FIREBASE_CONFIG = {
-   apiKey: "AIzaSyD0D_Bv58XDUhUlhmn3xBUMmZpgQ8FlwEA",
-  authDomain: "controllo-qualita-3f014.firebaseapp.com",
-  databaseURL: "https://controllo-qualita-3f014-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "controllo-qualita-3f014",
-  storageBucket: "controllo-qualita-3f014.firebasestorage.app",
-  messagingSenderId: "624379495703",
-  appId: "1:624379495703:web:0cf802649e0f047d82e352",
+  apiKey:            "INCOLLA_QUI_IL_TUO_apiKey",
+  authDomain:        "INCOLLA_QUI_IL_TUO_authDomain",
+  databaseURL:       "INCOLLA_QUI_IL_TUO_databaseURL",
+  projectId:         "INCOLLA_QUI_IL_TUO_projectId",
+  storageBucket:     "INCOLLA_QUI_IL_TUO_storageBucket",
+  messagingSenderId: "INCOLLA_QUI_IL_TUO_messagingSenderId",
+  appId:             "INCOLLA_QUI_IL_TUO_appId",
 };
 // ═══════════════════════════════════════════════════════════════
 
@@ -154,8 +154,8 @@ function buildPDF(r) {
         <div style="background:${bg};border-radius:6px;padding:10px;text-align:center">
           <div style="font-size:22px;font-weight:700;color:${c}">${n}</div>
           <div style="font-size:9px;color:${c};margin-top:3px;text-transform:uppercase">${l}</div>
-          ${i>0&&qC>0?`<div style="font-size:10px;font-weight:700;color:${c}">${Math.round(n/qC*100)}%</div>`:""}`).join("")}
-        </div>
+          ${i>0&&qC>0?`<div style="font-size:10px;font-weight:700;color:${c}">${Math.round(n/qC*100)}%</div>":""}
+        </div>`).join("")}
       </div>
       <div style="height:14px;border-radius:5px;overflow:hidden;display:flex;margin-bottom:12px;border:1px solid #eee">
         <div style="background:#27ae60;width:${pCo}%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;overflow:hidden">${pCo>8?pCo+"%":""}</div>
