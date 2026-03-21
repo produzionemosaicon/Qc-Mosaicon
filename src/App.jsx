@@ -16,22 +16,22 @@ const FIREBASE_CONFIG = {
 };
 // ═══════════════════════════════════════════════════════════════
 
-// ── colori dark theme ─────────────────────────────────────────────────────
+// ── colori light grey theme ───────────────────────────────────────────────
 const D = {
-  bg:      "#0f1117",
-  surface: "#1a1d2e",
-  border:  "#1e2130",
-  text:    "#ffffff",
-  muted:   "#4a5568",
-  green:   "#48bb78",
-  greenBg: "#064e3b",
-  amber:   "#f59e0b",
-  amberBg: "#78350f",
-  red:     "#ef4444",
-  redBg:   "#7c1d1d",
-  blue:    "#60a5fa",
-  blueBg:  "#1e3a5f",
-  blueAcc: "#2563eb",
+  bg:      "#f0f2f5",
+  surface: "#ffffff",
+  border:  "#dde1e7",
+  text:    "#1a1a2e",
+  muted:   "#7a8394",
+  green:   "#16a34a",
+  greenBg: "#dcfce7",
+  amber:   "#d97706",
+  amberBg: "#fef3c7",
+  red:     "#dc2626",
+  redBg:   "#fee2e2",
+  blue:    "#1a1a2e",
+  blueBg:  "#e8eaf0",
+  blueAcc: "#1a1a2e",
 };
 
 const DIFETTI_COMUNI = [
@@ -143,24 +143,26 @@ function buildPDF(r) {
       const nome = p.nome||("Foto "+(i+1));
       return '<div style="display:inline-block;text-align:center;margin:6px"><img src="'+p.data+'" style="width:220px;height:165px;object-fit:cover;border:1px solid #ddd;border-radius:6px;display:block"/><div style="font-size:9px;color:#888;margin-top:3px">'+nome+'</div></div>';
     }).join("");
-    const kpiCards = [
-      {l:"Controllate",n:qC,  c:"#1a1a1a",bg:"#f5f5f5"},
-      {l:"Conformi",   n:qCo, c:"#27ae60",bg:"#eafaf1"},
-      {l:"Riparate",   n:qR,  c:"#e67e22",bg:"#fff8e1"},
-      {l:"KO",         n:qK,  c:"#c0392b",bg:"#fce4ec"},
-      {l:"Rese",       n:qRe, c:"#e74c3c",bg:"#fde8e8"},
-    ].map((k,i)=>{
-      const pct = (i>0&&qC>0) ? ('<div style="font-size:10px;font-weight:700;color:'+k.c+'">'+Math.round(k.n/qC*100)+'%</div>') : '';
-      return '<div style="background:'+k.bg+';border-radius:6px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:'+k.c+'">'+k.n+'</div><div style="font-size:9px;color:'+k.c+';margin-top:3px;text-transform:uppercase">'+k.l+'</div>'+pct+'</div>';
-    }).join("");
+    const kpiCards = (()=>{
+      const items = [
+        {l:"Controllate",n:qC,  c:"#1a1a1a",bg:"#f5f5f5"},
+        {l:"Conformi",   n:qCo, c:"#27ae60",bg:"#eafaf1"},
+        {l:"Riparate",   n:qR,  c:"#e67e22",bg:"#fff8e1"},
+        {l:"KO",         n:qK,  c:"#c0392b",bg:"#fce4ec"},
+        {l:"Rese",       n:qRe, c:"#e74c3c",bg:"#fde8e8"},
+      ];
+      const cells = items.map((k,i)=>{
+        const pct = (i>0&&qC>0) ? ('<div style="font-size:10px;font-weight:700;color:'+k.c+'">'+Math.round(k.n/qC*100)+'%</div>') : '';
+        return '<td style="width:20%;padding:4px"><div style="background:'+k.bg+';border-radius:6px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:'+k.c+'">'+k.n+'</div><div style="font-size:9px;color:'+k.c+';margin-top:3px;text-transform:uppercase">'+k.l+'</div>'+pct+'</div></td>';
+      }).join("");
+      return '<table style="width:100%;border-collapse:separate;border-spacing:6px 0;table-layout:fixed"><tr>'+cells+'</tr></table>';
+    })();
     return `
     <div style="border:1px solid #e0e0e0;border-radius:8px;padding:16px;margin-bottom:16px;page-break-inside:avoid">
       <div style="font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #1a1a1a">
         Articolo ${idx+1} — ${art.modello}
       </div>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px">
-        ${kpiCards}
-      </div>
+      ${kpiCards}
       <div style="height:14px;border-radius:5px;overflow:hidden;display:flex;margin-bottom:12px;border:1px solid #eee">
         <div style="background:#27ae60;width:${pCo}%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;overflow:hidden">${pCo>8?pCo+"%":""}</div>
         <div style="background:#e67e22;width:${pR}%;"></div>
@@ -191,14 +193,11 @@ function buildPDF(r) {
       <div style="font-size:20px;font-weight:700;color:#1a1a1a">${v}</div>
     </div>`).join("")}
   </div>
-  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px">
-    ${[["Totale",totCtrl,"#1a1a1a","#f5f5f5"],["Conformi",totConf,"#27ae60","#eafaf1"],["Riparate",totRip,"#e67e22","#fff8e1"],["KO",totKO,"#c0392b","#fce4ec"],["Rese",totRese,"#e74c3c","#fde8e8"]].map(([l,n,c,bg])=>`
-    <div style="background:${bg};border-radius:8px;padding:10px;text-align:center">
-      <div style="font-size:26px;font-weight:700;color:${c}">${n}</div>
-      <div style="font-size:9px;color:${c};text-transform:uppercase;font-weight:700;margin-top:2px">${l}</div>
-      ${l!=="Totale"&&totCtrl>0?`<div style="font-size:11px;color:${c};font-weight:700;margin-top:2px">${Math.round(n/totCtrl*100)}%</div>`:""}`).join("")}
-    </div>
-  </div>
+  <table style="width:100%;border-collapse:separate;border-spacing:6px 0;table-layout:fixed;margin-bottom:20px"><tr>
+    ${[["Totale",totCtrl,"#1a1a1a","#f5f5f5"],["Conformi",totConf,"#27ae60","#eafaf1"],["Riparate",totRip,"#e67e22","#fff8e1"],["KO",totKO,"#c0392b","#fce4ec"],["Rese",totRese,"#e74c3c","#fde8e8"]].map(([l,n,c,bg])=>
+    '<td style="width:20%;padding:4px"><div style="background:'+bg+';border-radius:8px;padding:10px;text-align:center"><div style="font-size:26px;font-weight:700;color:'+c+'">'+n+'</div><div style="font-size:9px;color:'+c+';text-transform:uppercase;font-weight:700;margin-top:2px">'+l+'</div>'+(l!=="Totale"&&totCtrl>0?'<div style="font-size:11px;color:'+c+';font-weight:700;margin-top:2px">'+Math.round(n/totCtrl*100)+'%</div>':'')+'</div></td>'
+    ).join("")}
+  </tr></table>
   <div style="margin-bottom:20px">
     <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#555;margin-bottom:6px">Composizione lotto</div>
     <div style="height:16px;border-radius:6px;overflow:hidden;display:flex;border:1px solid #eee">
@@ -309,14 +308,11 @@ function buildCumulativePDF(reports, filtro) {
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Report Cumulativo — Mosaicon Shoes</title>
   <style>${PRINT_CSS}</style></head><body>
   ${BRAND_HEADER("Report Cumulativo — "+filtro)}
-  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px">
-    ${[["Paia totali",totCtrl,"#1a1a1a","#f5f5f5"],["Conformi",totConf,"#27ae60","#eafaf1"],["Riparate",totRip,"#e67e22","#fff8e1"],["KO",totKO,"#c0392b","#fce4ec"],["Rese",totRese,"#e74c3c","#fde8e8"]].map(([l,n,c,bg])=>`
-    <div style="background:${bg};border-radius:8px;padding:10px;text-align:center">
-      <div style="font-size:26px;font-weight:700;color:${c}">${n}</div>
-      <div style="font-size:9px;color:${c};text-transform:uppercase;font-weight:700;margin-top:2px">${l}</div>
-      ${l!=="Paia totali"&&totCtrl>0?`<div style="font-size:11px;color:${c};font-weight:700">${Math.round(n/totCtrl*100)}%</div>`:""}`).join("")}
-    </div>
-  </div>
+  <table style="width:100%;border-collapse:separate;border-spacing:6px 0;table-layout:fixed;margin-bottom:16px"><tr>
+    ${[["Paia totali",totCtrl,"#1a1a1a","#f5f5f5"],["Conformi",totConf,"#27ae60","#eafaf1"],["Riparate",totRip,"#e67e22","#fff8e1"],["KO",totKO,"#c0392b","#fce4ec"],["Rese",totRese,"#e74c3c","#fde8e8"]].map(([l,n,c,bg])=>
+    '<td style="width:20%;padding:4px"><div style="background:'+bg+';border-radius:8px;padding:10px;text-align:center"><div style="font-size:26px;font-weight:700;color:'+c+'">'+n+'</div><div style="font-size:9px;color:'+c+';text-transform:uppercase;font-weight:700;margin-top:2px">'+l+'</div>'+(l!=="Paia totali"&&totCtrl>0?'<div style="font-size:11px;color:'+c+';font-weight:700">'+Math.round(n/totCtrl*100)+'%</div>':'')+'</div></td>'
+    ).join("")}
+  </tr></table>
   <div style="font-size:11px;color:#555;margin-bottom:16px">Conformita media: <strong style="color:#27ae60">${avgConf}%</strong> &nbsp; Rapporti: <strong>${reports.length}</strong></div>
   <div class="sec-title">Riepilogo per calzaturificio</div>
   <table style="margin-bottom:4px"><thead><tr><th>Calzaturificio</th><th style="text-align:center">Rapporti</th><th style="text-align:center">Paia ctrl.</th><th style="text-align:center">Conformi</th><th style="text-align:center">Riparate</th><th style="text-align:center">KO</th><th style="text-align:center">Rese</th></tr></thead><tbody>${fabRows}</tbody></table>
