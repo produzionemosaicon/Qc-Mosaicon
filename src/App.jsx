@@ -47,6 +47,7 @@ const PROBLEMI_RESO = [
 ];
 const BLANK_ARTICOLO = {
   modello:"", qtaControllata:"", qtaConformi:"", qtaRiparate:"", qtaKO:"", qtaRese:"",
+  dettaglioRese:"",
   difettiRiparati:[], motiviReso:[], noteDifetti:"", noteReso:"", fotoDifetti:[]
 };
 
@@ -179,6 +180,7 @@ function buildPDF(r) {
         <div>${art.motiviReso.map(d=>`<span style="background:#fde8e8;color:#7b1a1a;border-radius:4px;padding:3px 8px;font-size:10px;margin:2px;display:inline-block">${d}</span>`).join("")}</div>
         ${art.noteReso?`<div style="font-size:10px;color:#555;background:#fff5f5;padding:6px 8px;border-radius:4px;margin-top:6px">${art.noteReso}</div>`:""}
       </div>`:""}
+      ${art.dettaglioRese?`<div style="margin-bottom:10px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#c0392b;margin-bottom:6px">Dettaglio paia rese — articolo e taglia</div><div style="font-size:11px;color:#333;background:#fff5f5;border-left:3px solid #e74c3c;padding:8px 10px;border-radius:0 4px 4px 0">${art.dettaglioRese}</div></div>`:""}
       ${photos?`<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#555;margin-bottom:8px">Foto difetti</div><div style="display:flex;flex-wrap:wrap;gap:6px">${photos}</div></div>`:""}
     </div>`;
   }).join("");
@@ -282,6 +284,7 @@ function buildCumulativePDF(reports, filtro) {
         <td style="padding:6px 10px;text-align:center;color:#e74c3c">${qRe}</td>
         <td style="padding:6px 10px;font-size:9px;color:#666">${(a.difettiRiparati||[]).join(", ")||"—"}</td>
         <td style="padding:6px 10px;font-size:9px;color:#c0392b">${(a.motiviReso||[]).join(", ")||""}</td>
+        <td style="padding:6px 10px;font-size:9px;color:#333">${a.dettaglioRese||""}</td>
       </tr>`;
     }).join("");
     return `<div style="margin-bottom:18px;page-break-inside:avoid">
@@ -299,6 +302,7 @@ function buildCumulativePDF(reports, filtro) {
           <th style="color:#fff;padding:5px 10px;font-size:9px;text-align:center">Rese</th>
           <th style="color:#fff;padding:5px 10px;font-size:9px;text-align:left">Difetti</th>
           <th style="color:#fff;padding:5px 10px;font-size:9px;text-align:left">Motivi reso</th>
+          <th style="color:#fff;padding:5px 10px;font-size:9px;text-align:left">Dettaglio rese</th>
         </tr></thead>
         <tbody>${artRows}</tbody>
       </table>
@@ -530,7 +534,7 @@ export default function App() {
         </div>
 
         {/* KPI riepilogo */}
-        <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:14}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10,marginBottom:14}}>
           {[["Controllate",totC,D.text,"transparent","none"],
             ["Conformi",totCo,D.green,D.greenBg,`3px solid ${D.green}`],
             [(r.articoli||[]).reduce((a,x)=>a+(x.qtaRiparate||0),0),"Riparate",D.amber,D.amberBg,`3px solid ${D.amber}`],
@@ -568,7 +572,7 @@ export default function App() {
               <div style={{fontWeight:700,fontSize:15,color:D.text,marginBottom:12,paddingBottom:8,borderBottom:`1px solid ${D.border}`}}>
                 Articolo {idx+1} — {art.modello}
               </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginBottom:10}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:8,marginBottom:10}}>
                 {[["Ctrl.",qC,D.text],["Conf.",art.qtaConformi||0,D.green],["Rip.",art.qtaRiparate||0,D.amber],["KO",art.qtaKO||0,D.red],["Rese",art.qtaRese||0,D.red]].map(([l,n,c],i)=>(
                   <div key={i} style={{background:D.bg,borderRadius:8,padding:"10px 4px",textAlign:"center",border:`1px solid ${D.border}`}}>
                     <div style={{fontSize:20,fontWeight:700,color:c}}>{n}</div>
@@ -593,6 +597,12 @@ export default function App() {
                     {art.motiviReso.map(d=><span key={d} style={{background:D.redBg,color:D.red,borderRadius:5,padding:"3px 8px",fontSize:11}}>{d}</span>)}
                   </div>
                   {art.noteReso&&<div style={{fontSize:12,color:D.muted,background:D.bg,borderRadius:6,padding:8,marginTop:6,border:`1px solid ${D.border}`}}>{art.noteReso}</div>}
+                </div>
+              )}
+              {art.dettaglioRese&&(
+                <div style={{marginBottom:8}}>
+                  <div style={{fontSize:10,fontWeight:700,color:D.red,textTransform:"uppercase",letterSpacing:.8,marginBottom:5}}>Dettaglio paia rese</div>
+                  <div style={{fontSize:12,color:D.text,background:D.bg,borderRadius:6,padding:8,border:"1px solid "+D.border}}>{art.dettaglioRese}</div>
                 </div>
               )}
               {(art.fotoDifetti||[]).length>0&&(
@@ -651,7 +661,7 @@ export default function App() {
               <Fld label="Modello / Articolo *">
                 <input value={art.modello} onChange={e=>setArt(idx,"modello",e.target.value)} placeholder="Es. Derby Classic cod. AB123" style={S.input}/>
               </Fld>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginBottom:10}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:8,marginBottom:10}}>
                 {[["Controllate *","qtaControllata"],["Conformi","qtaConformi"],["Riparate","qtaRiparate"],["KO","qtaKO"],["Rese","qtaRese"]].map(([l,f])=>(
                   <Fld key={f} label={l}>
                     <input type="number" min="0" value={art[f]} onChange={e=>setArt(idx,f,e.target.value)} placeholder="0"
@@ -682,6 +692,9 @@ export default function App() {
                     {PROBLEMI_RESO.map(d=><TagBtn key={d} label={d} active={(art.motiviReso||[]).includes(d)} color="danger" onClick={()=>setArt(idx,"motiviReso",tog(art.motiviReso||[],d))}/>)}
                   </div>
                   <textarea value={art.noteReso} onChange={e=>setArt(idx,"noteReso",e.target.value)} placeholder="Note reso..." rows={2}
+                    style={{...S.input, resize:"vertical", marginBottom:8}}/>
+                  <div style={{fontSize:11,color:D.red,fontWeight:700,marginBottom:6}}>Dettaglio paia rese (articolo e taglia)</div>
+                  <textarea value={art.dettaglioRese||""} onChange={e=>setArt(idx,"dettaglioRese",e.target.value)} placeholder="Es. Derby cod.AB123 - taglia 42 (2 paia), taglia 43 (1 paio)..." rows={3}
                     style={{...S.input, resize:"vertical"}}/>
                 </div>
               )}
@@ -735,7 +748,7 @@ export default function App() {
 
       {/* KPI */}
       {reports.length>0&&(
-        <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:20}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:12,marginBottom:20}}>
           {[
             ["Rapporti",filtered.length,D.blue,D.blueBg,D.blueAcc],
             ["Paia ctrl.",totCtrl,D.text,"transparent","none"],
@@ -754,7 +767,7 @@ export default function App() {
       {/* filtri + export */}
       {reports.length>0&&(
         <DCard style={{marginBottom:16}}>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:12}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:10,marginBottom:12}}>
             {[["Calzaturificio",filterFab,setFilterFab,[["tutti","Tutti"],...allFabs.map(f=>[f,f])]],
               ["Periodo",filterPeriod,setFilterPeriod,[["tutti","Tutti"],["settimana","Questa settimana"],["mese","Questo mese"]]],
             ].map(([l,val,setter,opts])=>(
@@ -788,7 +801,7 @@ export default function App() {
 
       {/* charts + lista */}
       {filtered.length>0&&(
-        <div style={{display:"grid",gridTemplateColumns:"1.4fr 1fr",gap:16,marginBottom:16}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:16,marginBottom:16}}>
           {/* barre conformita per calzaturificio */}
           <DCard style={{padding:"16px 18px"}}>
             <SectionTitle>Conformita per calzaturificio</SectionTitle>
