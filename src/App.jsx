@@ -50,11 +50,11 @@ function getWeek(d) {
 }
 function getYearWeek(iso) {
   const d = new Date(iso);
-  return `${d.getFullYear()}-W${String(getWeek(iso)).padStart(2,"0")}`;
+  return `${d.getFullYear()}-W${String(getWeek(iso)).padStart(2,"00")}`;
 }
 function getYearMonth(iso) {
   const d = new Date(iso);
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"00")}`;
 }
 
 function compressImage(file) {
@@ -78,14 +78,42 @@ function compressImage(file) {
   });
 }
 
+// ── stampa: scrive direttamente nella finestra, funziona su tutti i browser ──
 function openPrint(html) {
-  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-  const url  = URL.createObjectURL(blob);
-  const win  = window.open(url, "_blank");
-  if (win) { win.onload = () => setTimeout(() => win.print(), 600); }
-  else { const a = document.createElement("a"); a.href = url; a.download = "rapporto-qc.html"; a.click(); }
-  setTimeout(() => URL.revokeObjectURL(url), 15000);
+  const win = window.open("", "_blank");
+  if (win) {
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+    setTimeout(() => win.print(), 1000);
+  } else {
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url  = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "rapporto-qc.html";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
 }
+
+// ── CSS stampa condiviso ──────────────────────────────────────────────────
+const PRINT_CSS = `
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  body{font-family:Arial,sans-serif;font-size:11px;color:#1a1a1a;padding:24px}
+  table{width:100%;border-collapse:collapse}
+  th{background:#1a1a1a;color:#fff;padding:8px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px}
+  tr:nth-child(even) td{background:#f9f9f9}
+  @media print{body{padding:10px}@page{margin:8mm}}
+`;
+
+// ── header brand PDF ──────────────────────────────────────────────────────
+const BRAND_HEADER = (sottotitolo) => `
+  <div style="text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #1a1a1a">
+    <div style="font-family:'Arial Black',Arial,sans-serif;font-size:36px;font-weight:900;color:#1a1a1a;letter-spacing:5px;text-transform:uppercase">MOSAICON SHOES</div>
+    <div style="font-size:11px;color:#666;margin-top:6px;letter-spacing:2px;text-transform:uppercase">${sottotitolo}</div>
+  </div>
+`;
 
 // ── PDF singolo rapporto ──────────────────────────────────────────────────
 function buildPDF(r) {
@@ -98,15 +126,15 @@ function buildPDF(r) {
   const pConf    = totCtrl > 0 ? Math.round(totConf/totCtrl*100) : 0;
 
   const articoliHTML = articoli.map((art, idx) => {
-    const qC = parseInt(art.qtaControllata)||0;
-    const qCo= parseInt(art.qtaConformi)||0;
-    const qR = parseInt(art.qtaRiparate)||0;
-    const qK = parseInt(art.qtaKO)||0;
-    const qRe= parseInt(art.qtaRese)||0;
-    const pCo= qC>0?Math.round(qCo/qC*100):0;
-    const pR = qC>0?Math.round(qR/qC*100):0;
-    const pK = qC>0?Math.round(qK/qC*100):0;
-    const pRe= qC>0?Math.round(qRe/qC*100):0;
+    const qC  = parseInt(art.qtaControllata)||0;
+    const qCo = parseInt(art.qtaConformi)||0;
+    const qR  = parseInt(art.qtaRiparate)||0;
+    const qK  = parseInt(art.qtaKO)||0;
+    const qRe = parseInt(art.qtaRese)||0;
+    const pCo = qC>0?Math.round(qCo/qC*100):0;
+    const pR  = qC>0?Math.round(qR/qC*100):0;
+    const pK  = qC>0?Math.round(qK/qC*100):0;
+    const pRe = qC>0?Math.round(qRe/qC*100):0;
     const photos = (art.fotoDifetti||[]).map((p,i) =>
       `<div style="display:inline-block;text-align:center;margin:6px">
         <img src="${p.data}" style="width:220px;height:165px;object-fit:cover;border:1px solid #ddd;border-radius:6px;display:block"/>
@@ -114,94 +142,89 @@ function buildPDF(r) {
       </div>`).join("");
     return `
     <div style="border:1px solid #e0e0e0;border-radius:8px;padding:16px;margin-bottom:16px;page-break-inside:avoid">
-      <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #1a1a1a">
+      <div style="font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #1a1a1a">
         Articolo ${idx+1} — ${art.modello}
       </div>
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px">
-        <div style="background:#f5f5f5;border-radius:6px;padding:8px;text-align:center">
-          <div style="font-size:20px;font-weight:700;color:#1a1a1a">${qC}</div>
-          <div style="font-size:8px;color:#666;margin-top:2px;text-transform:uppercase">Controllate</div>
+        <div style="background:#f5f5f5;border-radius:6px;padding:10px;text-align:center">
+          <div style="font-size:22px;font-weight:700;color:#1a1a1a">${qC}</div>
+          <div style="font-size:9px;color:#666;margin-top:3px;text-transform:uppercase">Controllate</div>
         </div>
-        <div style="background:#eafaf1;border-radius:6px;padding:8px;text-align:center">
-          <div style="font-size:20px;font-weight:700;color:#27ae60">${qCo}</div>
-          <div style="font-size:8px;color:#27ae60;margin-top:2px;text-transform:uppercase">Conformi</div>
-          <div style="font-size:9px;font-weight:700;color:#27ae60">${pCo}%</div>
+        <div style="background:#eafaf1;border-radius:6px;padding:10px;text-align:center">
+          <div style="font-size:22px;font-weight:700;color:#27ae60">${qCo}</div>
+          <div style="font-size:9px;color:#27ae60;margin-top:3px;text-transform:uppercase">Conformi</div>
+          <div style="font-size:10px;font-weight:700;color:#27ae60">${pCo}%</div>
         </div>
-        <div style="background:#fff8e1;border-radius:6px;padding:8px;text-align:center">
-          <div style="font-size:20px;font-weight:700;color:#e67e22">${qR}</div>
-          <div style="font-size:8px;color:#e67e22;margin-top:2px;text-transform:uppercase">Riparate</div>
-          <div style="font-size:9px;font-weight:700;color:#e67e22">${pR}%</div>
+        <div style="background:#fff8e1;border-radius:6px;padding:10px;text-align:center">
+          <div style="font-size:22px;font-weight:700;color:#e67e22">${qR}</div>
+          <div style="font-size:9px;color:#e67e22;margin-top:3px;text-transform:uppercase">Riparate</div>
+          <div style="font-size:10px;font-weight:700;color:#e67e22">${pR}%</div>
         </div>
-        <div style="background:#fce4ec;border-radius:6px;padding:8px;text-align:center">
-          <div style="font-size:20px;font-weight:700;color:#c0392b">${qK}</div>
-          <div style="font-size:8px;color:#c0392b;margin-top:2px;text-transform:uppercase">KO</div>
-          <div style="font-size:9px;font-weight:700;color:#c0392b">${pK}%</div>
+        <div style="background:#fce4ec;border-radius:6px;padding:10px;text-align:center">
+          <div style="font-size:22px;font-weight:700;color:#c0392b">${qK}</div>
+          <div style="font-size:9px;color:#c0392b;margin-top:3px;text-transform:uppercase">KO</div>
+          <div style="font-size:10px;font-weight:700;color:#c0392b">${pK}%</div>
         </div>
-        <div style="background:#fde8e8;border-radius:6px;padding:8px;text-align:center">
-          <div style="font-size:20px;font-weight:700;color:#e74c3c">${qRe}</div>
-          <div style="font-size:8px;color:#e74c3c;margin-top:2px;text-transform:uppercase">Rese</div>
-          <div style="font-size:9px;font-weight:700;color:#e74c3c">${pRe}%</div>
+        <div style="background:#fde8e8;border-radius:6px;padding:10px;text-align:center">
+          <div style="font-size:22px;font-weight:700;color:#e74c3c">${qRe}</div>
+          <div style="font-size:9px;color:#e74c3c;margin-top:3px;text-transform:uppercase">Rese</div>
+          <div style="font-size:10px;font-weight:700;color:#e74c3c">${pRe}%</div>
         </div>
       </div>
-      <div style="height:14px;border-radius:5px;overflow:hidden;display:flex;margin-bottom:10px;border:1px solid #eee">
+      <div style="height:14px;border-radius:5px;overflow:hidden;display:flex;margin-bottom:12px;border:1px solid #eee">
         <div style="background:#27ae60;width:${pCo}%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;overflow:hidden">${pCo>8?pCo+"%":""}</div>
         <div style="background:#e67e22;width:${pR}%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;overflow:hidden">${pR>5?pR+"%":""}</div>
         <div style="background:#c0392b;width:${pK}%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;overflow:hidden">${pK>5?pK+"%":""}</div>
         <div style="background:#e74c3c;width:${pRe}%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;overflow:hidden">${pRe>5?pRe+"%":""}</div>
       </div>
       ${(art.difettiRiparati||[]).length>0?`
-      <div style="margin-bottom:8px">
-        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#555;margin-bottom:5px">Difetti rilevati</div>
-        <div>${art.difettiRiparati.map(d=>`<span style="background:#fff3cd;color:#856404;border-radius:4px;padding:2px 7px;font-size:10px;margin:2px;display:inline-block">${d}</span>`).join("")}</div>
-        ${art.noteDifetti?`<div style="font-size:10px;color:#555;background:#fffde7;padding:6px 8px;border-radius:4px;margin-top:5px">${art.noteDifetti}</div>`:""}
+      <div style="margin-bottom:10px">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#555;margin-bottom:6px">Difetti rilevati</div>
+        <div>${art.difettiRiparati.map(d=>`<span style="background:#fff3cd;color:#856404;border-radius:4px;padding:3px 8px;font-size:10px;margin:2px;display:inline-block">${d}</span>`).join("")}</div>
+        ${art.noteDifetti?`<div style="font-size:10px;color:#555;background:#fffde7;padding:6px 8px;border-radius:4px;margin-top:6px">${art.noteDifetti}</div>`:""}
       </div>`:""}
       ${(art.motiviReso||[]).length>0?`
-      <div style="margin-bottom:8px">
-        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#555;margin-bottom:5px">Motivi reso</div>
-        <div>${art.motiviReso.map(d=>`<span style="background:#fde8e8;color:#7b1a1a;border-radius:4px;padding:2px 7px;font-size:10px;margin:2px;display:inline-block">${d}</span>`).join("")}</div>
-        ${art.noteReso?`<div style="font-size:10px;color:#555;background:#fff5f5;padding:6px 8px;border-radius:4px;margin-top:5px">${art.noteReso}</div>`:""}
+      <div style="margin-bottom:10px">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#555;margin-bottom:6px">Motivi reso</div>
+        <div>${art.motiviReso.map(d=>`<span style="background:#fde8e8;color:#7b1a1a;border-radius:4px;padding:3px 8px;font-size:10px;margin:2px;display:inline-block">${d}</span>`).join("")}</div>
+        ${art.noteReso?`<div style="font-size:10px;color:#555;background:#fff5f5;padding:6px 8px;border-radius:4px;margin-top:6px">${art.noteReso}</div>`:""}
       </div>`:""}
-      ${photos?`<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#555;margin-bottom:6px">Foto difetti</div><div style="display:flex;flex-wrap:wrap;gap:4px">${photos}</div></div>`:""}
+      ${photos?`<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#555;margin-bottom:8px">Foto difetti</div><div style="display:flex;flex-wrap:wrap;gap:6px">${photos}</div></div>`:""}
     </div>`;
   }).join("");
 
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>QC ${r.calzaturificio} ${fmtDate(r.dataControllo)}</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-    body{font-family:Arial,sans-serif;font-size:11px;color:#1a1a1a;padding:24px;max-width:900px}
-    @media print{body{padding:12px}@page{margin:8mm}}
+  <style>${PRINT_CSS}
+    .sec-title{font-size:13px;font-weight:700;color:#1a1a1a;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #1a1a1a;padding-bottom:6px;margin-bottom:14px}
   </style></head><body>
 
-  <div style="text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #1a1a1a">
-    <div style="font-family:'Arial Black',Arial,sans-serif;font-size:32px;font-weight:900;color:#1a1a1a;letter-spacing:4px;text-transform:uppercase">MOSAICON SHOES</div>
-    <div style="font-size:11px;color:#666;margin-top:4px;letter-spacing:2px;text-transform:uppercase">Rapporto Controllo Qualita</div>
-  </div>
+  ${BRAND_HEADER("Rapporto Controllo Qualita")}
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
     <div style="background:#f5f5f5;border-radius:8px;padding:12px 16px">
       <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Calzaturificio</div>
-      <div style="font-size:18px;font-weight:700;color:#1a1a1a">${r.calzaturificio}</div>
+      <div style="font-size:20px;font-weight:700;color:#1a1a1a">${r.calzaturificio}</div>
     </div>
     <div style="background:#f5f5f5;border-radius:8px;padding:12px 16px">
       <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Controllore</div>
-      <div style="font-size:18px;font-weight:700;color:#1a1a1a">${r.controllore}</div>
+      <div style="font-size:20px;font-weight:700;color:#1a1a1a">${r.controllore}</div>
     </div>
     <div style="background:#f5f5f5;border-radius:8px;padding:12px 16px">
       <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Data e ora</div>
-      <div style="font-size:18px;font-weight:700;color:#1a1a1a">${fmt(r.dataControllo)}</div>
+      <div style="font-size:20px;font-weight:700;color:#1a1a1a">${fmt(r.dataControllo)}</div>
     </div>
     <div style="background:#f5f5f5;border-radius:8px;padding:12px 16px">
       <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Articoli controllati</div>
-      <div style="font-size:18px;font-weight:700;color:#1a1a1a">${articoli.length}</div>
+      <div style="font-size:20px;font-weight:700;color:#1a1a1a">${articoli.length}</div>
     </div>
   </div>
 
   <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px">
     ${[["Totale",totCtrl,"#1a1a1a","#f5f5f5"],["Conformi",totConf,"#27ae60","#eafaf1"],["Riparate",totRip,"#e67e22","#fff8e1"],["KO",totKO,"#c0392b","#fce4ec"],["Rese",totRese,"#e74c3c","#fde8e8"]].map(([l,n,c,bg])=>`
     <div style="background:${bg};border-radius:8px;padding:10px;text-align:center">
-      <div style="font-size:24px;font-weight:700;color:${c}">${n}</div>
+      <div style="font-size:26px;font-weight:700;color:${c}">${n}</div>
       <div style="font-size:9px;color:${c};margin-top:2px;text-transform:uppercase;font-weight:700">${l}</div>
-      ${l!=="Totale"&&totCtrl>0?`<div style="font-size:10px;color:${c};font-weight:700;margin-top:1px">${Math.round(n/totCtrl*100)}%</div>`:""}
+      ${l!=="Totale"&&totCtrl>0?`<div style="font-size:11px;color:${c};font-weight:700;margin-top:2px">${Math.round(n/totCtrl*100)}%</div>`:""}
     </div>`).join("")}
   </div>
 
@@ -209,20 +232,24 @@ function buildPDF(r) {
     <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#555;margin-bottom:6px">Composizione lotto complessivo</div>
     <div style="height:16px;border-radius:6px;overflow:hidden;display:flex;border:1px solid #eee">
       <div style="background:#27ae60;width:${pConf}%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;overflow:hidden">${pConf>8?pConf+"%":""}</div>
-      <div style="background:#e67e22;width:${totCtrl>0?Math.round(totRip/totCtrl*100):0}%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;overflow:hidden"></div>
-      <div style="background:#c0392b;width:${totCtrl>0?Math.round(totKO/totCtrl*100):0}%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;overflow:hidden"></div>
-      <div style="background:#e74c3c;width:${totCtrl>0?Math.round(totRese/totCtrl*100):0}%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;overflow:hidden"></div>
+      <div style="background:#e67e22;width:${totCtrl>0?Math.round(totRip/totCtrl*100):0}%;"></div>
+      <div style="background:#c0392b;width:${totCtrl>0?Math.round(totKO/totCtrl*100):0}%;"></div>
+      <div style="background:#e74c3c;width:${totCtrl>0?Math.round(totRese/totCtrl*100):0}%;"></div>
+    </div>
+    <div style="display:flex;gap:14px;margin-top:5px;font-size:9px;color:#666">
+      <span style="color:#27ae60">&#9632; Conformi ${pConf}%</span>
+      <span style="color:#e67e22">&#9632; Riparate ${totCtrl>0?Math.round(totRip/totCtrl*100):0}%</span>
+      <span style="color:#c0392b">&#9632; KO ${totCtrl>0?Math.round(totKO/totCtrl*100):0}%</span>
+      <span style="color:#e74c3c">&#9632; Rese ${totCtrl>0?Math.round(totRese/totCtrl*100):0}%</span>
     </div>
   </div>
 
-  <div style="font-size:13px;font-weight:700;color:#1a1a1a;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #1a1a1a;padding-bottom:6px;margin-bottom:14px">
-    Dettaglio articoli
-  </div>
+  <div class="sec-title">Dettaglio articoli</div>
   ${articoliHTML}
 
   <div style="margin-top:24px;border-top:1px solid #ddd;padding-top:10px;display:flex;justify-content:space-between;align-items:center;font-size:9px;color:#aaa">
-    <span>Mosaicon Shoes — Sistema QC Calzaturiero</span>
-    <span style="background:#d4edda;color:#155724;padding:2px 10px;border-radius:4px;font-weight:700;font-size:9px">DOCUMENTO UFFICIALE</span>
+    <span>Mosaicon Shoes — Sistema QC Calzaturiero — Generato il ${new Date().toLocaleDateString("it-IT")} ore ${new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}</span>
+    <span style="background:#d4edda;color:#155724;padding:2px 10px;border-radius:4px;font-weight:700">DOCUMENTO UFFICIALE</span>
   </div>
   </body></html>`;
 }
@@ -236,14 +263,12 @@ function buildCumulativePDF(reports, filtro) {
   const totRese = reports.reduce((a,r) => a+(r.articoli||[]).reduce((b,x)=>b+(parseInt(x.qtaRese)||0),0),0);
   const avgConf = totCtrl>0?Math.round(totConf/totCtrl*100):0;
 
-  // raggruppa per calzaturificio
   const byFab = {};
   reports.forEach(r => {
     const fab = r.calzaturificio || "N/D";
-    if (!byFab[fab]) byFab[fab] = { reports:0, articoli:0, ctrl:0, conf:0, rip:0, ko:0, rese:0 };
+    if (!byFab[fab]) byFab[fab] = { reports:0, ctrl:0, conf:0, rip:0, ko:0, rese:0 };
     byFab[fab].reports++;
     (r.articoli||[]).forEach(a => {
-      byFab[fab].articoli++;
       byFab[fab].ctrl  += parseInt(a.qtaControllata)||0;
       byFab[fab].conf  += parseInt(a.qtaConformi)||0;
       byFab[fab].rip   += parseInt(a.qtaRiparate)||0;
@@ -263,55 +288,29 @@ function buildCumulativePDF(reports, filtro) {
       <td style="padding:8px 10px;text-align:center;color:#e74c3c">${d.rese}</td>
     </tr>`).join("");
 
-  const righeReport = reports.map(r => `
-    <tr style="border-bottom:1px solid #eee">
+  const righeReport = reports.map(r => {
+    const rC  = (r.articoli||[]).reduce((a,x)=>a+(parseInt(x.qtaControllata)||0),0);
+    const rCo = (r.articoli||[]).reduce((a,x)=>a+(parseInt(x.qtaConformi)||0),0);
+    return `<tr>
       <td style="padding:6px 10px">${fmtDate(r.dataControllo)}</td>
       <td style="padding:6px 10px;font-weight:500">${r.calzaturificio}</td>
       <td style="padding:6px 10px">${r.controllore}</td>
-      <td style="padding:6px 10px">${(r.articoli||[]).length}</td>
-      <td style="padding:6px 10px;text-align:center">${(r.articoli||[]).reduce((a,x)=>a+(parseInt(x.qtaControllata)||0),0)}</td>
-      <td style="padding:6px 10px;text-align:center;color:#27ae60;font-weight:700">${(()=>{const c=(r.articoli||[]).reduce((a,x)=>a+(parseInt(x.qtaControllata)||0),0);const co=(r.articoli||[]).reduce((a,x)=>a+(parseInt(x.qtaConformi)||0),0);return c>0?Math.round(co/c*100)+"%":"—"})()}</td>
-    </tr>`).join("");
+      <td style="padding:6px 10px;text-align:center">${(r.articoli||[]).length}</td>
+      <td style="padding:6px 10px;text-align:center">${rC}</td>
+      <td style="padding:6px 10px;text-align:center;color:#27ae60;font-weight:700">${rC>0?Math.round(rCo/rC*100)+"%":"—"}</td>
+    </tr>`;
+  }).join("");
 
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Report Cumulativo — Mosaicon Shoes</title>
-  <style>*{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}body{font-family:Arial,sans-serif;font-size:11px;color:#1a1a1a;padding:24px}table{width:100%;border-collapse:collapse}th{background:#1a1a1a;color:#fff;padding:8px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px}tr:nth-child(even){background:#f9f9f9}@media print{body{padding:12px}@page{margin:8mm}}</style>
-  </head><body>
-  <div style="text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #1a1a1a">
-    <div style="font-family:'Arial Black',Arial,sans-serif;font-size:32px;font-weight:900;color:#1a1a1a;letter-spacing:4px">MOSAICON SHOES</div>
-    <div style="font-size:11px;color:#666;margin-top:4px;letter-spacing:2px;text-transform:uppercase">Report Cumulativo — ${filtro}</div>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px">
-    ${[["Paia totali",totCtrl,"#1a1a1a","#f5f5f5"],["Conformi",totConf,"#27ae60","#eafaf1"],["Riparate",totRip,"#e67e22","#fff8e1"],["KO",totKO,"#c0392b","#fce4ec"],["Rese",totRese,"#e74c3c","#fde8e8"]].map(([l,n,c,bg])=>`
-    <div style="background:${bg};border-radius:8px;padding:10px;text-align:center">
-      <div style="font-size:24px;font-weight:700;color:${c}">${n}</div>
-      <div style="font-size:9px;color:${c};text-transform:uppercase;font-weight:700;margin-top:2px">${l}</div>
-      ${l!=="Paia totali"&&totCtrl>0?`<div style="font-size:10px;color:${c};font-weight:700">${Math.round(n/totCtrl*100)}%</div>`:""}
-    </div>`).join("")}
-  </div>
-  <div style="margin-bottom:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#555">Conformita media: <span style="color:#27ae60">${avgConf}%</span> — Rapporti inclusi: <span style="color:#1a1a1a">${reports.length}</span></div>
-
-  <div style="font-size:13px;font-weight:700;color:#1a1a1a;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #1a1a1a;padding-bottom:5px;margin:18px 0 10px">Per calzaturificio</div>
-  <table style="margin-bottom:20px">
-    <thead><tr><th>Calzaturificio</th><th style="text-align:center">Rapporti</th><th style="text-align:center">Paia ctrl.</th><th style="text-align:center">Conformi</th><th style="text-align:center">Riparate</th><th style="text-align:center">KO</th><th style="text-align:center">Rese</th></tr></thead>
-    <tbody>${fabRows}</tbody>
-  </table>
-
-  <div style="font-size:13px;font-weight:700;color:#1a1a1a;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #1a1a1a;padding-bottom:5px;margin:18px 0 10px">Elenco rapporti</div>
-  <table style="margin-bottom:24px">
-    <thead><tr><th>Data</th><th>Calzaturificio</th><th>Controllore</th><th>Articoli</th><th style="text-align:center">Paia ctrl.</th><th style="text-align:center">Conformita</th></tr></thead>
-    <tbody>${righeReport}</tbody>
-  </table>
-
-  <div style="font-size:13px;font-weight:700;color:#1a1a1a;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #1a1a1a;padding-bottom:5px;margin:18px 0 14px">Dettaglio articoli per rapporto</div>
-  ${reports.map(r => {
+  const dettaglioHTML = reports.map(r => {
     const artRows = (r.articoli||[]).map((a,i) => {
-      const qC = parseInt(a.qtaControllata)||0;
-      const qCo= parseInt(a.qtaConformi)||0;
-      const qR = parseInt(a.qtaRiparate)||0;
-      const qK = parseInt(a.qtaKO)||0;
-      const qRe= parseInt(a.qtaRese)||0;
-      const pCo= qC>0?Math.round(qCo/qC*100):0;
+      const qC  = parseInt(a.qtaControllata)||0;
+      const qCo = parseInt(a.qtaConformi)||0;
+      const qR  = parseInt(a.qtaRiparate)||0;
+      const qK  = parseInt(a.qtaKO)||0;
+      const qRe = parseInt(a.qtaRese)||0;
+      const pCo = qC>0?Math.round(qCo/qC*100):0;
       const difetti = (a.difettiRiparati||[]).join(", ")||"—";
+      const motivi  = (a.motiviReso||[]).join(", ")||"—";
       return `<tr>
         <td style="padding:6px 10px;color:#333">${i+1}. ${a.modello}</td>
         <td style="padding:6px 10px;text-align:center">${qC}</td>
@@ -320,27 +319,80 @@ function buildCumulativePDF(reports, filtro) {
         <td style="padding:6px 10px;text-align:center;color:#c0392b">${qK}</td>
         <td style="padding:6px 10px;text-align:center;color:#e74c3c">${qRe}</td>
         <td style="padding:6px 10px;font-size:9px;color:#666">${difetti}</td>
+        <td style="padding:6px 10px;font-size:9px;color:#c0392b">${motivi!=="—"?motivi:""}</td>
       </tr>`;
     }).join("");
-    return `<div style="margin-bottom:16px;page-break-inside:avoid">
-      <div style="background:#f5f5f5;padding:8px 12px;border-radius:6px 6px 0 0;border:1px solid #e0e0e0;border-bottom:none;display:flex;justify-content:space-between;align-items:center">
-        <div style="font-weight:700;font-size:11px;color:#1a1a1a">${r.calzaturificio}</div>
-        <div style="font-size:10px;color:#666">${r.controllore} &nbsp;·&nbsp; ${fmtDate(r.dataControllo)}</div>
+    return `
+    <div style="margin-bottom:18px;page-break-inside:avoid">
+      <div style="background:#f0f0f0;padding:8px 14px;border-radius:6px 6px 0 0;border:1px solid #ddd;border-bottom:none;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:700;font-size:12px;color:#1a1a1a">${r.calzaturificio}</div>
+        <div style="font-size:10px;color:#666">${r.controllore} &nbsp;&middot;&nbsp; ${fmtDate(r.dataControllo)}</div>
       </div>
-      <table style="border:1px solid #e0e0e0;border-radius:0 0 6px 6px">
+      <table style="border:1px solid #ddd;border-radius:0 0 6px 6px">
         <thead><tr style="background:#333">
-          <th style="color:#fff;padding:5px 10px;font-size:9px;text-align:left;letter-spacing:.3px">Articolo</th>
+          <th style="color:#fff;padding:5px 10px;font-size:9px;text-align:left">Articolo</th>
           <th style="color:#fff;padding:5px 10px;font-size:9px;text-align:center">Ctrl.</th>
           <th style="color:#fff;padding:5px 10px;font-size:9px;text-align:center">Conformi</th>
           <th style="color:#fff;padding:5px 10px;font-size:9px;text-align:center">Riparate</th>
           <th style="color:#fff;padding:5px 10px;font-size:9px;text-align:center">KO</th>
           <th style="color:#fff;padding:5px 10px;font-size:9px;text-align:center">Rese</th>
           <th style="color:#fff;padding:5px 10px;font-size:9px;text-align:left">Difetti</th>
+          <th style="color:#fff;padding:5px 10px;font-size:9px;text-align:left">Motivi reso</th>
         </tr></thead>
         <tbody>${artRows}</tbody>
       </table>
     </div>`;
-  }).join("")}
+  }).join("");
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Report Cumulativo — Mosaicon Shoes</title>
+  <style>${PRINT_CSS}
+    .sec-title{font-size:13px;font-weight:700;color:#1a1a1a;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #1a1a1a;padding-bottom:5px;margin:20px 0 12px}
+  </style></head><body>
+
+  ${BRAND_HEADER("Report Cumulativo — " + filtro)}
+
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px">
+    ${[["Paia totali",totCtrl,"#1a1a1a","#f5f5f5"],["Conformi",totConf,"#27ae60","#eafaf1"],["Riparate",totRip,"#e67e22","#fff8e1"],["KO",totKO,"#c0392b","#fce4ec"],["Rese",totRese,"#e74c3c","#fde8e8"]].map(([l,n,c,bg])=>`
+    <div style="background:${bg};border-radius:8px;padding:10px;text-align:center">
+      <div style="font-size:26px;font-weight:700;color:${c}">${n}</div>
+      <div style="font-size:9px;color:${c};text-transform:uppercase;font-weight:700;margin-top:2px">${l}</div>
+      ${l!=="Paia totali"&&totCtrl>0?`<div style="font-size:11px;color:${c};font-weight:700;margin-top:2px">${Math.round(n/totCtrl*100)}%</div>`:""}
+    </div>`).join("")}
+  </div>
+
+  <div style="font-size:11px;color:#555;margin-bottom:16px">
+    Conformita media: <strong style="color:#27ae60">${avgConf}%</strong> &nbsp;&nbsp; Rapporti inclusi: <strong>${reports.length}</strong>
+  </div>
+
+  <div class="sec-title">Riepilogo per calzaturificio</div>
+  <table style="margin-bottom:4px">
+    <thead><tr>
+      <th>Calzaturificio</th>
+      <th style="text-align:center">Rapporti</th>
+      <th style="text-align:center">Paia ctrl.</th>
+      <th style="text-align:center">Conformi</th>
+      <th style="text-align:center">Riparate</th>
+      <th style="text-align:center">KO</th>
+      <th style="text-align:center">Rese</th>
+    </tr></thead>
+    <tbody>${fabRows}</tbody>
+  </table>
+
+  <div class="sec-title">Elenco rapporti</div>
+  <table style="margin-bottom:4px">
+    <thead><tr>
+      <th>Data</th>
+      <th>Calzaturificio</th>
+      <th>Controllore</th>
+      <th style="text-align:center">Articoli</th>
+      <th style="text-align:center">Paia ctrl.</th>
+      <th style="text-align:center">Conformita</th>
+    </tr></thead>
+    <tbody>${righeReport}</tbody>
+  </table>
+
+  <div class="sec-title">Dettaglio articoli per rapporto</div>
+  ${dettaglioHTML}
 
   <div style="margin-top:24px;border-top:1px solid #ddd;padding-top:10px;display:flex;justify-content:space-between;font-size:9px;color:#aaa">
     <span>Generato il ${new Date().toLocaleDateString("it-IT")} ore ${new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}</span>
@@ -393,19 +445,18 @@ function Toast({ t }) {
 
 // ── App ───────────────────────────────────────────────────────────────────
 export default function App() {
-  const [view, setView]          = useState("list");
-  const [reports, setReports]    = useState([]);
-  const [selected, setSelected]  = useState(null);
-  const [saving, setSaving]      = useState(false);
-  const [toast, setToast]        = useState(null);
-  const [dbReady, setDbReady]    = useState(false);
-  const [dbError, setDbError]    = useState(false);
-  const [filterFab, setFilterFab]= useState("tutti");
-  const [filterPeriod, setFilterPeriod] = useState("tutti");
-  const [filterArt, setFilterArt]= useState("");
-  const [showCumul, setShowCumul]= useState(false);
-  const [cumulPeriod, setCumulPeriod] = useState("settimana");
-  const dbRef = useRef(null);
+  const [view, setView]                   = useState("list");
+  const [reports, setReports]             = useState([]);
+  const [selected, setSelected]           = useState(null);
+  const [saving, setSaving]               = useState(false);
+  const [toast, setToast]                 = useState(null);
+  const [dbReady, setDbReady]             = useState(false);
+  const [dbError, setDbError]             = useState(false);
+  const [filterFab, setFilterFab]         = useState("tutti");
+  const [filterPeriod, setFilterPeriod]   = useState("tutti");
+  const [filterArt, setFilterArt]         = useState("");
+  const [cumulPeriod, setCumulPeriod]     = useState("settimana");
+  const dbRef    = useRef(null);
   const fileRefs = useRef({});
 
   const blankForm = { controllore:"", calzaturificio:"", dataControllo:new Date().toISOString().slice(0,16), articoli:[{...BLANK_ARTICOLO}] };
@@ -436,11 +487,11 @@ export default function App() {
   function setArticolo(idx, field, value) {
     setForm(f => { const arts=[...f.articoli]; arts[idx]={...arts[idx],[field]:value}; return {...f,articoli:arts}; });
   }
-  function addArticolo() { setForm(f => ({...f,articoli:[...f.articoli,{...BLANK_ARTICOLO}]})); }
-  function removeArticolo(idx) { setForm(f => ({...f,articoli:f.articoli.filter((_,i)=>i!==idx)})); }
+  function addArticolo()         { setForm(f => ({...f,articoli:[...f.articoli,{...BLANK_ARTICOLO}]})); }
+  function removeArticolo(idx)   { setForm(f => ({...f,articoli:f.articoli.filter((_,i)=>i!==idx)})); }
 
   async function onPhoto(artIdx, e) {
-    const files = Array.from(e.target.files);
+    const files      = Array.from(e.target.files);
     const compressed = await Promise.all(files.map(f => compressImage(f)));
     setForm(f => { const arts=[...f.articoli]; arts[artIdx]={...arts[artIdx],fotoDifetti:[...(arts[artIdx].fotoDifetti||[]),...compressed]}; return {...f,articoli:arts}; });
     e.target.value="";
@@ -448,7 +499,7 @@ export default function App() {
 
   async function submit() {
     if (!form.controllore.trim()||!form.calzaturificio.trim()) { showToast("Compila controllore e calzaturificio",false); return; }
-    if (form.articoli.length===0||!form.articoli[0].modello.trim()) { showToast("Aggiungi almeno un articolo con il modello",false); return; }
+    if (!form.articoli[0]?.modello?.trim()) { showToast("Aggiungi almeno un articolo con il modello",false); return; }
     setSaving(true);
     const rep = { ...form, id:Date.now().toString().slice(-7), ts:Date.now(),
       articoli: form.articoli.map(a=>({...a,
@@ -480,25 +531,22 @@ export default function App() {
     } catch(e) { showToast("Errore: "+e.message,false); }
   }
 
-  // filtri
   const allFabs = [...new Set(reports.map(r=>r.calzaturificio).filter(Boolean))].sort();
-  const allArts = [...new Set(reports.flatMap(r=>(r.articoli||[]).map(a=>a.modello)).filter(Boolean))].sort();
 
   const filtered = reports.filter(r => {
     if (filterFab!=="tutti" && r.calzaturificio!==filterFab) return false;
     if (filterArt && !(r.articoli||[]).some(a=>a.modello?.toLowerCase().includes(filterArt.toLowerCase()))) return false;
     if (filterPeriod!=="tutti") {
-      const d = r.dataControllo;
       const now = new Date();
-      if (filterPeriod==="settimana" && getYearWeek(d)!==getYearWeek(now.toISOString())) return false;
-      if (filterPeriod==="mese" && getYearMonth(d)!==getYearMonth(now.toISOString())) return false;
+      if (filterPeriod==="settimana" && getYearWeek(r.dataControllo)!==getYearWeek(now.toISOString())) return false;
+      if (filterPeriod==="mese"      && getYearMonth(r.dataControllo)!==getYearMonth(now.toISOString())) return false;
     }
     return true;
   });
 
   function exportCumul() {
     const now = new Date();
-    let reps = reports;
+    let reps  = [...reports];
     let label = "Tutti i periodi";
     if (filterFab!=="tutti") { reps=reps.filter(r=>r.calzaturificio===filterFab); }
     if (cumulPeriod==="settimana") { reps=reps.filter(r=>getYearWeek(r.dataControllo)===getYearWeek(now.toISOString())); label="Settimana corrente"; }
@@ -507,7 +555,6 @@ export default function App() {
     openPrint(buildCumulativePDF(reps, label+(filterFab!=="tutti"?" — "+filterFab:"")));
   }
 
-  // ── totali dashboard
   const totCtrl = filtered.reduce((a,r)=>a+(r.articoli||[]).reduce((b,x)=>b+(x.qtaControllata||0),0),0);
   const totConf = filtered.reduce((a,r)=>a+(r.articoli||[]).reduce((b,x)=>b+(x.qtaConformi||0),0),0);
   const totKO   = filtered.reduce((a,r)=>a+(r.articoli||[]).reduce((b,x)=>b+(x.qtaKO||0),0),0);
@@ -516,10 +563,10 @@ export default function App() {
 
   // ── DETAIL ────────────────────────────────────────────────────────────────
   if (view==="detail"&&selected) {
-    const r=selected;
-    const totC=((r.articoli||[]).reduce((a,x)=>a+(x.qtaControllata||0),0));
-    const totCo=((r.articoli||[]).reduce((a,x)=>a+(x.qtaConformi||0),0));
-    const pConf=totC>0?Math.round(totCo/totC*100):0;
+    const r   = selected;
+    const totC  = (r.articoli||[]).reduce((a,x)=>a+(x.qtaControllata||0),0);
+    const totCo = (r.articoli||[]).reduce((a,x)=>a+(x.qtaConformi||0),0);
+    const pConf = totC>0?Math.round(totCo/totC*100):0;
     return (
       <div style={{maxWidth:700,margin:"0 auto",padding:"0 0 60px"}}>
         {toast&&<Toast t={toast}/>}
@@ -533,7 +580,6 @@ export default function App() {
           <button onClick={()=>delReport(r)} style={{background:"none",border:"0.5px solid var(--color-border-danger)",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:13,color:"var(--color-text-danger)"}}>Elimina</button>
         </div>
 
-        {/* riepilogo */}
         <div style={{background:"var(--color-background-primary)",border:"0.5px solid var(--color-border-tertiary)",borderRadius:12,padding:"14px 18px",marginBottom:14}}>
           <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8}}>
             {[["Controllate",totC,"var(--color-text-primary)"],
@@ -541,15 +587,10 @@ export default function App() {
               [(r.articoli||[]).reduce((a,x)=>a+(x.qtaRiparate||0),0),"Riparate","var(--color-text-warning)"],
               [(r.articoli||[]).reduce((a,x)=>a+(x.qtaKO||0),0),"KO","var(--color-text-danger)"],
               [(r.articoli||[]).reduce((a,x)=>a+(x.qtaRese||0),0),"Rese","var(--color-text-danger)"],
-            ].map(([n,l,c],i)=>typeof n==="number"?(
+            ].map(([n,l,c],i)=>(
               <div key={i} style={{textAlign:"center"}}>
                 <div style={{fontSize:22,fontWeight:500,color:c}}>{n}</div>
                 <div style={{fontSize:10,color:"var(--color-text-secondary)",marginTop:2}}>{l}</div>
-              </div>
-            ):(
-              <div key={i} style={{textAlign:"center"}}>
-                <div style={{fontSize:22,fontWeight:500,color:l}}>{n}</div>
-                <div style={{fontSize:10,color:"var(--color-text-secondary)",marginTop:2}}>{c}</div>
               </div>
             ))}
           </div>
@@ -559,10 +600,8 @@ export default function App() {
           </div>
         </div>
 
-        {/* articoli */}
         {(r.articoli||[]).map((art,idx)=>{
-          const qC=art.qtaControllata||0;
-          const pC=qC>0?Math.round((art.qtaConformi||0)/qC*100):0;
+          const qC = art.qtaControllata||0;
           return (
             <div key={idx} style={{background:"var(--color-background-primary)",border:"0.5px solid var(--color-border-tertiary)",borderRadius:12,padding:"14px 18px",marginBottom:12}}>
               <div style={{fontWeight:500,fontSize:15,marginBottom:12,paddingBottom:8,borderBottom:"0.5px solid var(--color-border-tertiary)"}}>
@@ -638,11 +677,11 @@ export default function App() {
         </Sec>
 
         {form.articoli.map((art,idx)=>{
-          const qC=parseInt(art.qtaControllata)||0;
-          const qCo=parseInt(art.qtaConformi)||0;
-          const qR=parseInt(art.qtaRiparate)||0;
-          const qK=parseInt(art.qtaKO)||0;
-          const qRe=parseInt(art.qtaRese)||0;
+          const qC  = parseInt(art.qtaControllata)||0;
+          const qCo = parseInt(art.qtaConformi)||0;
+          const qR  = parseInt(art.qtaRiparate)||0;
+          const qK  = parseInt(art.qtaKO)||0;
+          const qRe = parseInt(art.qtaRese)||0;
           const frRef = el => { if(el) fileRefs.current[idx]=el; };
           return (
             <div key={idx} style={{background:"var(--color-background-primary)",border:"0.5px solid var(--color-border-info)",borderRadius:12,padding:"16px 18px",marginBottom:14}}>
@@ -719,22 +758,22 @@ export default function App() {
     <div style={{maxWidth:780,margin:"0 auto",padding:"0 0 40px"}}>
       {toast&&<Toast t={toast}/>}
 
-      {/* header brand */}
       <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",marginBottom:24,paddingBottom:16,borderBottom:"0.5px solid var(--color-border-tertiary)"}}>
         <div>
           <div style={{fontSize:24,fontWeight:500,letterSpacing:"2px",color:"var(--color-text-primary)"}}>MOSAICON SHOES</div>
           <div style={{fontSize:12,color:"var(--color-text-secondary)",marginTop:2,letterSpacing:"1px"}}>QUALITY CONTROL</div>
         </div>
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
-          {dbReady&&<div style={{display:"flex",alignItems:"center",gap:5,fontSize:12,color:"var(--color-text-success)"}}>
-            <div style={{width:7,height:7,borderRadius:"50%",background:"var(--color-text-success)"}}/>
-            <span>Sincronizzato</span>
-          </div>}
+          {dbReady&&(
+            <div style={{display:"flex",alignItems:"center",gap:5,fontSize:12,color:"var(--color-text-success)"}}>
+              <div style={{width:7,height:7,borderRadius:"50%",background:"var(--color-text-success)"}}/>
+              <span>Sincronizzato</span>
+            </div>
+          )}
           <button onClick={()=>setView("form")} style={{padding:"9px 20px",borderRadius:8,border:"none",background:"#1a1a2e",color:"#fff",fontSize:13,fontWeight:500,cursor:"pointer"}}>+ Nuovo</button>
         </div>
       </div>
 
-      {/* KPI cards */}
       {reports.length>0&&(
         <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:20}}>
           {[
@@ -752,7 +791,6 @@ export default function App() {
         </div>
       )}
 
-      {/* filtri */}
       {reports.length>0&&(
         <div style={{background:"var(--color-background-primary)",border:"0.5px solid var(--color-border-tertiary)",borderRadius:12,padding:"14px 16px",marginBottom:16}}>
           <div style={{fontSize:11,fontWeight:500,color:"var(--color-text-secondary)",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>Filtri</div>
@@ -793,7 +831,6 @@ export default function App() {
         </div>
       )}
 
-      {/* lista rapporti */}
       {filtered.length===0&&(
         <div style={{textAlign:"center",padding:"60px 20px",color:"var(--color-text-secondary)"}}>
           <div style={{fontSize:48,marginBottom:16}}>👟</div>
@@ -804,19 +841,19 @@ export default function App() {
 
       <div style={{display:"flex",flexDirection:"column",gap:8}}>
         {filtered.map(r=>{
-          const totC=(r.articoli||[]).reduce((a,x)=>a+(x.qtaControllata||0),0);
-          const totCo=(r.articoli||[]).reduce((a,x)=>a+(x.qtaConformi||0),0);
-          const pct=totC>0?Math.round(totCo/totC*100):0;
-          const c=pct>=90?"var(--color-text-success)":pct>=70?"var(--color-text-warning)":"var(--color-text-danger)";
-          const bg=pct>=90?"var(--color-background-success)":pct>=70?"var(--color-background-warning)":"var(--color-background-danger)";
-          const nFoto=(r.articoli||[]).reduce((a,x)=>a+(x.fotoDifetti?.length||0),0);
+          const totC  = (r.articoli||[]).reduce((a,x)=>a+(x.qtaControllata||0),0);
+          const totCo = (r.articoli||[]).reduce((a,x)=>a+(x.qtaConformi||0),0);
+          const pct   = totC>0?Math.round(totCo/totC*100):0;
+          const c     = pct>=90?"var(--color-text-success)":pct>=70?"var(--color-text-warning)":"var(--color-text-danger)";
+          const bg    = pct>=90?"var(--color-background-success)":pct>=70?"var(--color-background-warning)":"var(--color-background-danger)";
+          const nFoto = (r.articoli||[]).reduce((a,x)=>a+(x.fotoDifetti?.length||0),0);
           return (
             <div key={r.fbKey||r.id} onClick={()=>{setSelected(r);setView("detail");}}
               style={{background:"var(--color-background-primary)",border:"0.5px solid var(--color-border-tertiary)",borderRadius:12,padding:"14px 18px",cursor:"pointer",display:"flex",alignItems:"center",gap:14}}
               onMouseEnter={e=>e.currentTarget.style.borderColor="var(--color-border-secondary)"}
               onMouseLeave={e=>e.currentTarget.style.borderColor="var(--color-border-tertiary)"}>
-              <div style={{width:52,height:52,borderRadius:"50%",background:bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                <span style={{fontSize:14,fontWeight:500,color:c,lineHeight:1}}>{pct}%</span>
+              <div style={{width:52,height:52,borderRadius:"50%",background:bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                <span style={{fontSize:14,fontWeight:500,color:c}}>{pct}%</span>
               </div>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontWeight:500,fontSize:15,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.calzaturificio}</div>
