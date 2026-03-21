@@ -787,15 +787,15 @@ export default function App() {
       {reports.length>0&&(
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:12,marginBottom:20}}>
           {[
-            ["Rapporti",filtered.length,D.blue,D.blueBg,D.blueAcc],
-            ["Paia ctrl.",totCtrl,D.text,"transparent","none"],
+            [filtered.length,"Rapporti",D.text,"transparent","none"],
+            [totCtrl,"Paia ctrl.",D.text,"transparent","none"],
             [avgConf+"%","Conformita",D.green,D.greenBg,D.green],
             [totKO,"Paia KO",D.amber,D.amberBg,D.amber],
             [totRese,"Paia rese",D.red,D.redBg,D.red],
           ].map(([v,l,c,bg,bt],i)=>(
             <div key={i} style={{...S.card, padding:"16px 14px", textAlign:"center", borderTop:`3px solid ${bt}`, background:bg}}>
-              <div style={{fontSize:28,fontWeight:700,color:c,lineHeight:1}}>{v}</div>
-              <div style={{fontSize:10,color:D.muted,marginTop:6,textTransform:"uppercase",letterSpacing:".8px"}}>{l}</div>
+              <div style={{fontSize:32,fontWeight:700,color:c,lineHeight:1}}>{v}</div>
+              <div style={{fontSize:12,color:D.muted,marginTop:8,textTransform:"uppercase",letterSpacing:".8px"}}>{l}</div>
             </div>
           ))}
         </div>
