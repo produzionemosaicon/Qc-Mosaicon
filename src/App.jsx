@@ -139,23 +139,27 @@ function buildPDF(r) {
     const qR=parseInt(art.qtaRiparate)||0,   qK=parseInt(art.qtaKO)||0, qRe=parseInt(art.qtaRese)||0;
     const pCo=qC>0?Math.round(qCo/qC*100):0, pR=qC>0?Math.round(qR/qC*100):0;
     const pK=qC>0?Math.round(qK/qC*100):0,   pRe=qC>0?Math.round(qRe/qC*100):0;
-    const photos=(art.fotoDifetti||[]).map((p,i)=>`
-      <div style="display:inline-block;text-align:center;margin:6px">
-        <img src="${p.data}" style="width:220px;height:165px;object-fit:cover;border:1px solid #ddd;border-radius:6px;display:block"/>
-        <div style="font-size:9px;color:#888;margin-top:3px">${p.nome||"Foto "+(i+1)}</div>
-      </div>`).join("");
+    const photos=(art.fotoDifetti||[]).map((p,i)=>{
+      const nome = p.nome||("Foto "+(i+1));
+      return '<div style="display:inline-block;text-align:center;margin:6px"><img src="'+p.data+'" style="width:220px;height:165px;object-fit:cover;border:1px solid #ddd;border-radius:6px;display:block"/><div style="font-size:9px;color:#888;margin-top:3px">'+nome+'</div></div>';
+    }).join("");
+    const kpiCards = [
+      {l:"Controllate",n:qC,  c:"#1a1a1a",bg:"#f5f5f5"},
+      {l:"Conformi",   n:qCo, c:"#27ae60",bg:"#eafaf1"},
+      {l:"Riparate",   n:qR,  c:"#e67e22",bg:"#fff8e1"},
+      {l:"KO",         n:qK,  c:"#c0392b",bg:"#fce4ec"},
+      {l:"Rese",       n:qRe, c:"#e74c3c",bg:"#fde8e8"},
+    ].map((k,i)=>{
+      const pct = (i>0&&qC>0) ? ('<div style="font-size:10px;font-weight:700;color:'+k.c+'">'+Math.round(k.n/qC*100)+'%</div>') : '';
+      return '<div style="background:'+k.bg+';border-radius:6px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:'+k.c+'">'+k.n+'</div><div style="font-size:9px;color:'+k.c+';margin-top:3px;text-transform:uppercase">'+k.l+'</div>'+pct+'</div>';
+    }).join("");
     return `
     <div style="border:1px solid #e0e0e0;border-radius:8px;padding:16px;margin-bottom:16px;page-break-inside:avoid">
       <div style="font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #1a1a1a">
         Articolo ${idx+1} — ${art.modello}
       </div>
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px">
-        ${[["Controllate",qC,"#1a1a1a","#f5f5f5"],["Conformi",qCo,"#27ae60","#eafaf1"],["Riparate",qR,"#e67e22","#fff8e1"],["KO",qK,"#c0392b","#fce4ec"],["Rese",qRe,"#e74c3c","#fde8e8"]].map(([l,n,c,bg],i)=>`
-        <div style="background:${bg};border-radius:6px;padding:10px;text-align:center">
-          <div style="font-size:22px;font-weight:700;color:${c}">${n}</div>
-          <div style="font-size:9px;color:${c};margin-top:3px;text-transform:uppercase">${l}${i>0&&qC>0?" "+Math.round(n/qC*100)+"%":""}</div>
-
-        </div>`).join("")}
+        ${kpiCards}
       </div>
       <div style="height:14px;border-radius:5px;overflow:hidden;display:flex;margin-bottom:12px;border:1px solid #eee">
         <div style="background:#27ae60;width:${pCo}%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;overflow:hidden">${pCo>8?pCo+"%":""}</div>
