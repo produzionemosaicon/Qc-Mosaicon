@@ -221,6 +221,7 @@ function buildPDF(r) {
   ${artsHTML}
   <div style="margin-top:24px;border-top:1px solid #ddd;padding-top:10px;display:flex;justify-content:space-between;align-items:center;font-size:9px;color:#aaa">
     <span>Mosaicon Shoes — Generato il ${new Date().toLocaleDateString("it-IT")} ore ${new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}</span>
+    <span style="font-size:7px;color:#bbb;letter-spacing:.5px">&#9670;&nbsp;<span style="text-transform:uppercase;letter-spacing:1.5px">developed by</span>&nbsp;&#9670;&nbsp;<span style="font-weight:700;letter-spacing:1px">SR &amp; MC</span></span>
     <span style="background:#d4edda;color:#155724;padding:2px 10px;border-radius:4px;font-weight:700">DOCUMENTO UFFICIALE</span>
   </div>
   </body></html>`;
@@ -328,6 +329,7 @@ function buildCumulativePDF(reports, filtro) {
   ${dettaglio}
   <div style="margin-top:24px;border-top:1px solid #ddd;padding-top:10px;display:flex;justify-content:space-between;font-size:9px;color:#aaa">
     <span>Generato il ${new Date().toLocaleDateString("it-IT")} ore ${new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}</span>
+    <span style="font-size:7px;color:#bbb;letter-spacing:.5px">&#9670;&nbsp;<span style="text-transform:uppercase;letter-spacing:1.5px">developed by</span>&nbsp;&#9670;&nbsp;<span style="font-weight:700;letter-spacing:1px">SR &amp; MC</span></span>
     <span style="background:#d4edda;color:#155724;padding:2px 10px;border-radius:4px;font-weight:700">MOSAICON SHOES — DOCUMENTO UFFICIALE</span>
   </div>
   </body></html>`;
@@ -360,6 +362,7 @@ function Fld({label, children}) {
     <div style={{marginBottom:12}}>
       <div style={S.label}>{label}</div>
       {children}
+    <div style={{textAlign:"center",marginTop:32,paddingTop:16,borderTop:`1px solid ${D.border}`}}><span style={{fontSize:8,color:D.text,letterSpacing:".5px"}}>&#9670;&nbsp;<span style={{fontSize:7,textTransform:"uppercase",letterSpacing:"1.5px",fontWeight:400}}>developed by</span>&nbsp;&#9670;&nbsp;<span style={{fontWeight:700,letterSpacing:"1.5px"}}>SR &amp; MC</span></span></div>
     </div>
   );
 }
@@ -773,6 +776,7 @@ export default function App() {
         <div>
           <div style={{fontSize:22,fontWeight:700,letterSpacing:"3px",color:D.text}}>MOSAICON SHOES</div>
           <div style={{fontSize:10,color:D.muted,marginTop:3,letterSpacing:"2px"}}>QUALITY CONTROL DASHBOARD</div>
+          <div style={{marginTop:4}}><span style={{fontSize:8,color:D.text,letterSpacing:".5px"}}>&#9670;&nbsp;<span style={{fontSize:7,textTransform:"uppercase",letterSpacing:"1.5px",fontWeight:400}}>developed by</span>&nbsp;&#9670;&nbsp;<span style={{fontWeight:700,letterSpacing:"1.5px"}}>SR &amp; MC</span></span></div>
         </div>
         <div style={{display:"flex",gap:10,alignItems:"center"}}>
           {dbReady&&<div style={{display:"flex",alignItems:"center",gap:5,fontSize:12,color:D.green}}>
