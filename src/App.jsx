@@ -869,23 +869,27 @@ export default function App() {
               const nFoto=(r.articoli||[]).reduce((a,x)=>a+(x.fotoDifetti?.length||0),0);
               return(
                 <div key={r.fbKey||r.id} onClick={()=>{setSelected(r);setView("detail");}}
-                  style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",borderRadius:8,background:D.bg,border:`1px solid ${D.border}`,cursor:"pointer"}}
+                  style={{background:D.surface,border:`1px solid ${D.border}`,borderRadius:10,padding:"12px 14px",cursor:"pointer"}}
                   onMouseEnter={e=>e.currentTarget.style.borderColor=D.muted}
                   onMouseLeave={e=>e.currentTarget.style.borderColor=D.border}>
-                  <div style={{width:46,height:46,borderRadius:"50%",background:pctBg(pct),display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                    <span style={{fontSize:12,fontWeight:700,color:pctColor(pct)}}>{pct}%</span>
+                  <div style={{display:"flex",alignItems:"center",gap:12}}>
+                    <div style={{width:48,height:48,borderRadius:"50%",background:pctBg(pct),display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                      <span style={{fontSize:13,fontWeight:700,color:pctColor(pct)}}>{pct}%</span>
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontWeight:700,fontSize:15,color:D.text}}>{r.calzaturificio}</div>
+                      <div style={{fontSize:12,color:D.muted,marginTop:2}}>{r.controllore} · {fmtDate(r.dataControllo)}</div>
+                      <div style={{fontSize:11,color:D.muted,marginTop:1}}>{(r.articoli||[]).length} articoli</div>
+                    </div>
+                    <span style={{color:D.muted,fontSize:20,flexShrink:0}}>›</span>
                   </div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontWeight:700,fontSize:14,color:D.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.calzaturificio}</div>
-                    <div style={{fontSize:11,color:D.muted,marginTop:2}}>{r.controllore} · {fmt(r.dataControllo)}</div>
+                  <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:10,paddingTop:10,borderTop:`1px solid ${D.border}`}}>
+                    <span style={{background:D.bg,color:D.muted,borderRadius:6,padding:"4px 10px",fontSize:12}}>{totC} controllate</span>
+                    <span style={{background:D.greenBg,color:D.green,borderRadius:6,padding:"4px 10px",fontSize:12,fontWeight:600}}>{totCo} conformi</span>
+                    {(r.articoli||[]).reduce((a,x)=>a+(x.qtaKO||0),0)>0&&<span style={{background:D.redBg,color:D.red,borderRadius:6,padding:"4px 10px",fontSize:12,fontWeight:600}}>{(r.articoli||[]).reduce((a,x)=>a+(x.qtaKO||0),0)} KO</span>}
+                    {(r.articoli||[]).reduce((a,x)=>a+(x.qtaRese||0),0)>0&&<span style={{background:D.redBg,color:D.red,borderRadius:6,padding:"4px 10px",fontSize:12,fontWeight:600}}>{(r.articoli||[]).reduce((a,x)=>a+(x.qtaRese||0),0)} rese</span>}
+                    {nFoto>0&&<span style={{background:D.bg,color:D.muted,borderRadius:6,padding:"4px 10px",fontSize:12}}>{nFoto} foto</span>}
                   </div>
-                  <div style={{display:"flex",gap:6,flexShrink:0,alignItems:"center"}}>
-                    <span style={{background:D.surface,color:D.muted,borderRadius:5,padding:"2px 7px",fontSize:11}}>{totC} ctrl</span>
-                    <span style={{background:D.greenBg,color:D.green,borderRadius:5,padding:"2px 7px",fontSize:11}}>{totCo} conf</span>
-                    {(r.articoli||[]).reduce((a,x)=>a+(x.qtaKO||0),0)>0&&<span style={{background:D.redBg,color:D.red,borderRadius:5,padding:"2px 7px",fontSize:11}}>{(r.articoli||[]).reduce((a,x)=>a+(x.qtaKO||0),0)} KO</span>}
-                    {nFoto>0&&<span style={{fontSize:11,color:D.muted}}>{nFoto} foto</span>}
-                  </div>
-                  <span style={{color:D.muted,fontSize:18}}>›</span>
                 </div>
               );
             })}
