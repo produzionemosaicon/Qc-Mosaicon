@@ -169,7 +169,8 @@ function buildPDF(r) {
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:Arial,sans-serif;font-size:11px;color:#1a1a1a;padding:24px;max-width:900px}
-    @media print{body{padding:12px}@page{margin:8mm}}
+   @media print{body{padding:12px}@page{margin:8mm}}
+*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
   </style></head><body>
 
   <div style="text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #1a1a1a">
