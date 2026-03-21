@@ -47,7 +47,7 @@ const PROBLEMI_RESO = [
 ];
 const BLANK_ARTICOLO = {
   modello:"", qtaControllata:"", qtaConformi:"", qtaRiparate:"", qtaKO:"", qtaRese:"",
-  dettaglioRese:"",
+  dettaglioRese:[{articolo:"",taglia:""}],
   difettiRiparati:[], motiviReso:[], noteDifetti:"", noteReso:"", fotoDifetti:[]
 };
 
@@ -180,7 +180,9 @@ function buildPDF(r) {
         <div>${art.motiviReso.map(d=>`<span style="background:#fde8e8;color:#7b1a1a;border-radius:4px;padding:3px 8px;font-size:10px;margin:2px;display:inline-block">${d}</span>`).join("")}</div>
         ${art.noteReso?`<div style="font-size:10px;color:#555;background:#fff5f5;padding:6px 8px;border-radius:4px;margin-top:6px">${art.noteReso}</div>`:""}
       </div>`:""}
-      ${art.dettaglioRese?`<div style="margin-bottom:10px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#c0392b;margin-bottom:6px">Dettaglio paia rese — articolo e taglia</div><div style="font-size:11px;color:#333;background:#fff5f5;border-left:3px solid #e74c3c;padding:8px 10px;border-radius:0 4px 4px 0">${art.dettaglioRese}</div></div>`:""}
+      ${(art.dettaglioRese||[]).some(r=>r.articolo||r.taglia)?
+        '<div style="margin-bottom:10px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#c0392b;margin-bottom:6px">Dettaglio paia rese</div><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr><th style="background:#fde8e8;color:#7b1a1a;padding:5px 8px;text-align:left;font-size:9px;text-transform:uppercase">Articolo</th><th style="background:#fde8e8;color:#7b1a1a;padding:5px 8px;text-align:left;font-size:9px;text-transform:uppercase">Taglia</th></tr></thead><tbody>'+(art.dettaglioRese||[]).filter(r=>r.articolo||r.taglia).map(r=>'<tr><td style="padding:5px 8px;border-bottom:1px solid #fde8e8;color:#333">'+( r.articolo||'—')+'</td><td style="padding:5px 8px;border-bottom:1px solid #fde8e8;color:#333;font-weight:700">'+(r.taglia||'—')+'</td></tr>').join('')+'</tbody></table></div>'
+        :""}
       ${photos?`<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#555;margin-bottom:8px">Foto difetti</div><div style="display:flex;flex-wrap:wrap;gap:6px">${photos}</div></div>`:""}
     </div>`;
   }).join("");
@@ -284,7 +286,7 @@ function buildCumulativePDF(reports, filtro) {
         <td style="padding:6px 10px;text-align:center;color:#e74c3c">${qRe}</td>
         <td style="padding:6px 10px;font-size:9px;color:#666">${(a.difettiRiparati||[]).join(", ")||"—"}</td>
         <td style="padding:6px 10px;font-size:9px;color:#c0392b">${(a.motiviReso||[]).join(", ")||""}</td>
-        <td style="padding:6px 10px;font-size:9px;color:#333">${a.dettaglioRese||""}</td>
+        <td style="padding:6px 10px;font-size:9px;color:#333">${(a.dettaglioRese||[]).filter(r=>r.articolo||r.taglia).map(r=>(r.articolo||"")+" tg."+(r.taglia||"")).join(", ")}</td>
       </tr>`;
     }).join("");
     return `<div style="margin-bottom:18px;page-break-inside:avoid">
@@ -599,10 +601,21 @@ export default function App() {
                   {art.noteReso&&<div style={{fontSize:12,color:D.muted,background:D.bg,borderRadius:6,padding:8,marginTop:6,border:`1px solid ${D.border}`}}>{art.noteReso}</div>}
                 </div>
               )}
-              {art.dettaglioRese&&(
+              {(art.dettaglioRese||[]).some(r=>r.articolo||r.taglia)&&(
                 <div style={{marginBottom:8}}>
-                  <div style={{fontSize:10,fontWeight:700,color:D.red,textTransform:"uppercase",letterSpacing:.8,marginBottom:5}}>Dettaglio paia rese</div>
-                  <div style={{fontSize:12,color:D.text,background:D.bg,borderRadius:6,padding:8,border:"1px solid "+D.border}}>{art.dettaglioRese}</div>
+                  <div style={{fontSize:10,fontWeight:700,color:D.red,textTransform:"uppercase",letterSpacing:.8,marginBottom:8}}>Dettaglio paia rese</div>
+                  <div style={{background:D.bg,borderRadius:8,border:`1px solid ${D.border}`,overflow:"hidden"}}>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",background:D.border}}>
+                      <div style={{padding:"6px 12px",fontSize:10,fontWeight:700,color:D.muted,textTransform:"uppercase",letterSpacing:.8,background:D.surface}}>Articolo</div>
+                      <div style={{padding:"6px 12px",fontSize:10,fontWeight:700,color:D.muted,textTransform:"uppercase",letterSpacing:.8,background:D.surface}}>Taglia</div>
+                    </div>
+                    {(art.dettaglioRese||[]).filter(r=>r.articolo||r.taglia).map((r,i)=>(
+                      <div key={i} style={{display:"grid",gridTemplateColumns:"1fr 1fr",borderTop:`1px solid ${D.border}`}}>
+                        <div style={{padding:"8px 12px",fontSize:13,color:D.text}}>{r.articolo||"—"}</div>
+                        <div style={{padding:"8px 12px",fontSize:13,color:D.text,fontWeight:600}}>{r.taglia||"—"}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
               {(art.fotoDifetti||[]).length>0&&(
@@ -693,9 +706,33 @@ export default function App() {
                   </div>
                   <textarea value={art.noteReso} onChange={e=>setArt(idx,"noteReso",e.target.value)} placeholder="Note reso..." rows={2}
                     style={{...S.input, resize:"vertical", marginBottom:8}}/>
-                  <div style={{fontSize:11,color:D.red,fontWeight:700,marginBottom:6}}>Dettaglio paia rese (articolo e taglia)</div>
-                  <textarea value={art.dettaglioRese||""} onChange={e=>setArt(idx,"dettaglioRese",e.target.value)} placeholder="Es. Derby cod.AB123 - taglia 42 (2 paia), taglia 43 (1 paio)..." rows={3}
-                    style={{...S.input, resize:"vertical"}}/>
+                  <div style={{fontSize:11,color:D.red,fontWeight:700,marginBottom:8}}>Dettaglio paia rese</div>
+                  {(art.dettaglioRese||[{articolo:"",taglia:""}]).map((riga,ri)=>(
+                    <div key={ri} style={{display:"flex",gap:8,alignItems:"center",marginBottom:8}}>
+                      <input value={riga.articolo} onChange={e=>{
+                        const dr=[...(art.dettaglioRese||[{articolo:"",taglia:""}])];
+                        dr[ri]={...dr[ri],articolo:e.target.value};
+                        setArt(idx,"dettaglioRese",dr);
+                      }} placeholder="Articolo / modello" style={{...S.input,flex:2}}/>
+                      <input value={riga.taglia} onChange={e=>{
+                        const dr=[...(art.dettaglioRese||[{articolo:"",taglia:""}])];
+                        dr[ri]={...dr[ri],taglia:e.target.value};
+                        setArt(idx,"dettaglioRese",dr);
+                      }} placeholder="Taglia" style={{...S.input,flex:1}}/>
+                      {(art.dettaglioRese||[]).length>1&&(
+                        <button onClick={()=>{
+                          const dr=(art.dettaglioRese||[]).filter((_,i)=>i!==ri);
+                          setArt(idx,"dettaglioRese",dr);
+                        }} style={{background:"none",border:"none",color:D.red,cursor:"pointer",fontSize:18,padding:"0 4px",flexShrink:0}}>×</button>
+                      )}
+                    </div>
+                  ))}
+                  <button onClick={()=>{
+                    const dr=[...(art.dettaglioRese||[{articolo:"",taglia:""}]),{articolo:"",taglia:""}];
+                    setArt(idx,"dettaglioRese",dr);
+                  }} style={{background:"none",border:`1px dashed ${D.border}`,borderRadius:6,padding:"5px 12px",cursor:"pointer",fontSize:12,color:D.muted,width:"100%",marginTop:2}}>
+                    + Aggiungi altro reso
+                  </button>
                 </div>
               )}
               <button onClick={()=>fileRefs.current[idx]?.click()} style={{display:"flex",alignItems:"center",gap:8,padding:"9px 14px",borderRadius:8,border:`1px dashed ${D.border}`,background:D.bg,cursor:"pointer",fontSize:12,color:D.muted,width:"100%",justifyContent:"center"}}>
