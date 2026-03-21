@@ -169,8 +169,7 @@ function buildPDF(r) {
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:Arial,sans-serif;font-size:11px;color:#1a1a1a;padding:24px;max-width:900px}
-  @media print{body{padding:12px}@page{margin:8mm}}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
-*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+ @media print{body{padding:12px}@page{margin:8mm;color-adjust:exact;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
   </style></head><body>
 
   <div style="text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #1a1a1a">
@@ -275,7 +274,7 @@ function buildCumulativePDF(reports, filtro) {
     </tr>`).join("");
 
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Report Cumulativo — Mosaicon Shoes</title>
-  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:11px;color:#1a1a1a;padding:24px}table{width:100%;border-collapse:collapse}th{background:#1a1a1a;color:#fff;padding:8px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px}tr:nth-child(even){background:#f9f9f9}@media print{body{padding:12px}@page{margin:8mm}}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:11px;color:#1a1a1a;padding:24px}table{width:100%;border-collapse:collapse}th{background:#1a1a1a;color:#fff;padding:8px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px}tr:nth-child(even){background:#f9f9f9}
   </head><body>
   <div style="text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #1a1a1a">
     <div style="font-family:'Arial Black',Arial,sans-serif;font-size:32px;font-weight:900;color:#1a1a1a;letter-spacing:4px">MOSAICON SHOES</div>
